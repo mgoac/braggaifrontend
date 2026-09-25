@@ -1,371 +1,402 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>BraggAI &mdash; Ask the Set</title>
-  <meta name="description" content="BraggAI is the student resource bot for Florida A&M University. Ask anything about campus &mdash; dining, transit, housing, clubs &mdash; get a straight, verified answer." />
-  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='14' fill='%230e3326'/%3E%3Ctext x='50' y='72' font-size='62' font-family='Georgia,serif' fill='%23f06414' text-anchor='middle'%3E%3F%3C/text%3E%3C/svg%3E" />
-  <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300..900;1,9..144,300..900&family=JetBrains+Mono:wght@400;500;700&family=Space+Grotesk:wght@300..700&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="css/styles.css" />
-  <noscript><style>.reveal{opacity:1;transform:none}</style></noscript>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>BraggAI — The Digital Front Door to FAMU</title>
+<meta name="description" content="Ask anything about FAMU. Find the right office, the right form, the right person — instantly." />
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+
+<link rel="stylesheet" href="css/styles.css" />
 </head>
 <body>
 
-<!-- TICKER TAPE -->
-<div class="ticker-tape" role="presentation">
-  <div class="ticker-track" id="ticker-track"><!-- seeded by js --></div>
-</div>
+<!-- ============================================================
+     NAV
+     ============================================================ -->
+<header class="nav">
+  <div class="nav-inner">
+    <a href="#" class="brand">
+      <span class="brand-mark">B</span>
+      <span class="brand-name">BraggAI</span>
+      <span class="brand-sub">FAMU</span>
+    </a>
 
-<!-- NAV -->
-<header class="nav wrap">
-  <a class="wordmark" href="#top" aria-label="BraggAI home">
-    <span class="wm">BRAGGA</span><span class="wm wm-dot">&#183;</span><span class="wm wm-orange">I</span>
-    <span class="wm-sub">STUDENT BOT &#183; THE SET</span>
-  </a>
-  <nav class="nav-links" aria-label="Primary">
-    <a href="#index">the index</a>
-    <a href="#how">how it works</a>
-    <a href="#proof">proof</a>
-    <a href="#faq">faq</a>
-  </nav>
-  <a class="btn btn-nav" href="#try">TRY BRAGGAI &#8594;</a>
+    <nav class="nav-links" aria-label="Primary">
+      <a href="#how">How it works</a>
+      <a href="#resources">Resources</a>
+      <a href="#departments">Departments</a>
+      <a href="#status">Campus status</a>
+    </nav>
+
+    <div class="nav-actions">
+      <button class="btn btn-nav btn-auth" id="auth-open" type="button">LOG IN</button>
+      <a href="#ask" class="btn btn-primary btn-nav">TRY BRAGGAI</a>
+    </div>
+  </div>
 </header>
 
-<main id="top">
+<main>
 
-  <!-- HERO -->
-  <section class="hero">
-    <div class="wrap hero-cols">
-      <div class="hero-left">
-        <p class="eyebrow reveal">FAMU STUDENT RESOURCE &#183; EST. TALLAHASSEE, FL</p>
+  <!-- ============================================================
+       HERO / ASK
+       ============================================================ -->
+  <section class="hero" id="ask">
+    <div class="hero-grain" aria-hidden="true"></div>
+    <div class="hero-inner">
+      <p class="eyebrow">Florida A&amp;M University · Digital Front Door</p>
 
-        <h1 class="hero-title reveal">
-          Ask the Set.<br />
-          Get a <span class="hl">straight</span> answer.
-        </h1>
+      <h1 class="hero-title">
+        <span class="line">Don't navigate</span>
+        <span class="line line-accent">the university.</span>
+        <span class="line">Let it navigate <em>for you.</em></span>
+      </h1>
 
-        <p class="hero-sub reveal">
-          BraggAI is the on-campus bot that actually knows FAMU &mdash; dining hall
-          hours, shuttle routes, club tables, library quiet floors, and who to
-          email when the printer eats your paper. No rabbit holes. No
-          <em>&ldquo;as an AI&hellip;&rdquo;</em> No guesswork.
+      <p class="hero-lede">
+        Ask anything in plain language. BraggAI finds the right office, the right form,
+        the right phone number — and tells you exactly what to do next.
+      </p>
+
+      <form class="ask" id="ask-form" autocomplete="off">
+        <div class="ask-bar">
+          <span class="ask-mark" aria-hidden="true">↳</span>
+          <input
+            type="text"
+            id="ask-input"
+            name="q"
+            placeholder="Ask anything about FAMU…"
+            aria-label="Ask anything about FAMU"
+            required
+          />
+          <button type="submit" class="btn btn-primary ask-submit">Ask →</button>
+        </div>
+
+        <div class="ask-chips" aria-label="Example questions">
+          <button type="button" class="chip" data-q="I can't register for my class.">I can't register for my class.</button>
+          <button type="button" class="chip" data-q="Who do I contact about financial aid?">Who handles financial aid?</button>
+          <button type="button" class="chip" data-q="I have a registration hold.">I have a registration hold.</button>
+          <button type="button" class="chip" data-q="Where do I get my transcript?">Where do I get my transcript?</button>
+          <button type="button" class="chip" data-q="I emailed an office and nobody responded.">Nobody responded to my email.</button>
+        </div>
+      </form>
+
+      <div class="ask-answer" id="ask-answer" hidden>
+        <div class="answer-head">
+          <p class="eyebrow" id="answer-source">Source</p>
+          <button type="button" class="answer-close" id="answer-close" aria-label="Close answer">×</button>
+        </div>
+        <p class="answer-body" id="answer-body"></p>
+        <div class="answer-actions" id="answer-actions"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============================================================
+       QUICK ACCESS
+       ============================================================ -->
+  <section class="section" id="resources">
+    <div class="section-head">
+      <p class="eyebrow">Quick access</p>
+      <h2 class="section-title">Where do you need to go?</h2>
+      <p class="section-lede">
+        Eight doors. Every one of them leads to the right person.
+      </p>
+    </div>
+
+    <div class="grid grid-4">
+      <a class="card" href="#">
+        <span class="card-icon" aria-hidden="true">🎓</span>
+        <h3 class="card-title">Academics</h3>
+        <p class="card-body">Classes, registration, advising, degree requirements, transcripts, graduation.</p>
+        <span class="card-cta">Open →</span>
+      </a>
+
+      <a class="card" href="#">
+        <span class="card-icon" aria-hidden="true">💰</span>
+        <h3 class="card-title">Financial Aid</h3>
+        <p class="card-body">FAFSA, scholarships, disbursement, verification, financial holds and contacts.</p>
+        <span class="card-cta">Open →</span>
+      </a>
+
+      <a class="card" href="#">
+        <span class="card-icon" aria-hidden="true">🏠</span>
+        <h3 class="card-title">Housing</h3>
+        <p class="card-body">Residence halls, applications, maintenance, dining and residential resources.</p>
+        <span class="card-cta">Open →</span>
+      </a>
+
+      <a class="card" href="#">
+        <span class="card-icon" aria-hidden="true">💻</span>
+        <h3 class="card-title">Technology</h3>
+        <p class="card-body">FAMU email, Canvas, iRattler, Wi-Fi, accounts and IT support.</p>
+        <span class="card-cta">Open →</span>
+      </a>
+
+      <a class="card" href="#">
+        <span class="card-icon" aria-hidden="true">📄</span>
+        <h3 class="card-title">Registrar</h3>
+        <p class="card-body">Registration, transcripts, enrollment verification, records and forms.</p>
+        <span class="card-cta">Open →</span>
+      </a>
+
+      <a class="card" href="#">
+        <span class="card-icon" aria-hidden="true">❤️</span>
+        <h3 class="card-title">Student Support</h3>
+        <p class="card-body">Counseling, health, accessibility, student affairs and career services.</p>
+        <span class="card-cta">Open →</span>
+      </a>
+
+      <a class="card" href="#">
+        <span class="card-icon" aria-hidden="true">⚖️</span>
+        <h3 class="card-title">Complaints &amp; Appeals</h3>
+        <p class="card-body">Grievances, academic complaints, Ombuds resources and escalation paths.</p>
+        <span class="card-cta">Open →</span>
+      </a>
+
+      <a class="card card-alert" href="#">
+        <span class="card-icon" aria-hidden="true">🚨</span>
+        <h3 class="card-title">Safety</h3>
+        <p class="card-body">Emergency info, campus police, alerts, crisis resources and safety procedures.</p>
+        <span class="card-cta">Open →</span>
+      </a>
+    </div>
+  </section>
+
+  <!-- ============================================================
+       HOW IT WORKS
+       ============================================================ -->
+  <section class="section section-alt" id="how">
+    <div class="section-head">
+      <p class="eyebrow">How it works</p>
+      <h2 class="section-title">Three questions. One answer.</h2>
+      <p class="section-lede">
+        BraggAI was built around the only three things a student actually needs to know.
+      </p>
+    </div>
+
+    <div class="grid grid-3">
+      <article class="step">
+        <span class="step-num">01</span>
+        <h3 class="step-title">What do I need?</h3>
+        <p class="step-body">
+          Describe the problem in your own words. BraggAI identifies what you're actually asking for.
         </p>
+      </article>
 
-        <div class="hero-cta reveal">
-          <a class="btn btn-primary" href="#try">ASK A QUESTION &#8594;</a>
-          <p class="hero-cta-note"><span class="sq">&#9632;</span> 100% anonymous &#183; no student ID stored</p>
-        </div>
-
-        <dl class="hero-stats reveal">
-          <div class="stat">
-            <dt>answers on file</dt>
-            <dd><span class="count" data-count="4120">0</span></dd>
-          </div>
-          <div class="stat">
-            <dt>verified sources</dt>
-            <dd><span class="count" data-count="186">0</span></dd>
-          </div>
-          <div class="stat">
-            <dt>avg. reply time</dt>
-            <dd>t+<span class="count" data-count="4.3" data-decimals="1">0</span>s</dd>
-          </div>
-          <div class="stat">
-            <dt>official ratio</dt>
-            <dd>0<span class="ghost">.00</span></dd>
-          </div>
-        </dl>
-      </div>
-
-      <div class="hero-right reveal">
-        <figure class="teletype-card">
-          <figcaption class="teletype-head">
-            <span class="rec-dot" aria-hidden="true"></span>
-            bragga/ask &mdash; live session
-            <span class="teletype-id">CH-001</span>
-          </figcaption>
-          <div class="teletype-body" id="teletype" aria-live="polite"></div>
-          <div class="teletype-foot">
-            <span class="cursor-block" aria-hidden="true"></span>
-            <span class="blind-text">type to connect&hellip;</span>
-          </div>
-        </figure>
-        <p class="scrawly" aria-hidden="true">&#8599; students type that. we&rsquo;ve answered it.</p>
-      </div>
-    </div>
-  </section><!-- MARQUEE -->
-  <section class="marquee" aria-hidden="true">
-    <div class="marquee-track">
-      <div class="marquee-row">
-        <span>RATTLER PRIDE</span><b>&#10035;</b><span>DIGNITY &amp; DIVINE SPIRIT</span><b>&#10035;</b><span>ORANGE &amp; GREEN</span><b>&#10035;</b><span>FAMU HI</span><b>&#10035;</b><span>HIGH OVER THE SET</span><b>&#10035;</b><span>RATTLERS KNOCK</span><b>&#10035;</b><span>THE SET &rsquo;26</span><b>&#10035;</b>
-      </div>
-      <div class="marquee-row">
-        <span>RATTLER PRIDE</span><b>&#10035;</b><span>DIGNITY &amp; DIVINE SPIRIT</span><b>&#10035;</b><span>ORANGE &amp; GREEN</span><b>&#10035;</b><span>FAMU HI</span><b>&#10035;</b><span>HIGH OVER THE SET</span><b>&#10035;</b><span>RATTLERS KNOCK</span><b>&#10035;</b><span>THE SET &rsquo;26</span><b>&#10035;</b>
-      </div>
-    </div>
-    <span class="marquee-tag">TALLAHASSEE, FL &bull; WET SEASON EDITION</span>
-  </section>
-
-  <!-- CH.01 THE INDEX -->
-  <section class="index" id="index">
-    <div class="wrap">
-      <header class="section-head reveal">
-        <p class="eyebrow">CH.01 &mdash; The Index</p>
-        <h2>Six things you will <span class="ital">actually</span> ask about</h2>
-        <p class="section-lede">Every answer is filed, verified, and stamped. If it isn&rsquo;t in the index yet, we&rsquo;re adding it by Friday.</p>
-      </header>
-
-      <div class="card-grid">
-        <a href="#try" class="card card-wide reveal">
-          <span class="card-no">01</span>
-          <h3>Housing &amp; move-in</h3>
-          <p>Palmetto Phase check-in windows, RA office hours, who to email about a broken AC in Tallahassee August, and the residency packet you actually need.</p>
-          <span class="card-arrow">&#8594;</span>
-        </a>
-        <a href="#try" class="card reveal">
-          <span class="card-no">02</span>
-          <h3>Dining &amp; Rattler Bucks</h3>
-          <p>Meal plan windows, the $6 lunch rotation, dining hall menus, and how to stop your roommate bleeding your last $3.50.</p>
-          <span class="card-arrow">&#8594;</span>
-        </a>
-        <a href="#try" class="card reveal">
-          <span class="card-no">03</span>
-          <h3>Transit &amp; parking</h3>
-          <p>Star Metro run times, shuttle loops, garage badge scanners, and the endlessly mystical Purple Zone.</p>
-          <span class="card-arrow">&#8594;</span>
-        </a>
-        <a href="#try" class="card reveal">
-          <span class="card-no">04</span>
-          <h3>Academics &amp; advisers</h3>
-          <p>Drop dates, registrar forms, tutoring hubs per college, and how to finally decode a degree audit.</p>
-          <span class="card-arrow">&#8594;</span>
-        </a>
-        <a href="#try" class="card reveal">
-          <span class="card-no">05</span>
-          <h3>Friends, clubs &amp; events</h3>
-          <p>CLUB meetings, OOPS, career fairs, step-show entry details, and full game-day logistics on Bragg.</p>
-          <span class="card-arrow">&#8594;</span>
-        </a>
-        <a href="#try" class="card reveal">
-          <span class="card-no">06</span>
-          <h3>Health &amp; safety</h3>
-          <p>Student Health Services hours, the counseling line, Safe Ride, and a first-contact walkthrough when you don&rsquo;t know who to call.</p>
-          <span class="card-arrow">&#8594;</span>
-        </a>
-      </div>
-    </div>
-  </section>
-
-  <!-- CH.02 HOW -->
-  <section class="how" id="how">
-    <div class="wrap">
-      <header class="section-head reveal">
-        <p class="eyebrow">CH.02 &mdash; How it works</p>
-        <h2>Closer to a campus insider<br />than a search engine</h2>
-      </header>
-
-      <ol class="steps">
-        <li class="step reveal">
-          <span class="step-no">01</span>
-          <h3>Ask in plain words</h3>
-          <p>Type like you&rsquo;re texting your roommate, not writing an email to the dean. BraggAI reads it like a local.</p>
-        </li>
-        <li class="step reveal">
-          <span class="step-no">02</span>
-          <h3>Checked on the ground</h3>
-          <p>Answers are cross-checked against official FAMU pages, bulletin boards, and staff-verified info &mdash; then stamped with a confidence level. We prefer &ldquo;let me walk upstairs and see.&rdquo;</p>
-        </li>
-        <li class="step reveal">
-          <span class="step-no">03</span>
-          <h3>Answer, fast</h3>
-          <p>Most replies land in seconds with the exact building, phone line, and next step. Sources listed, so you can verify the hype.</p>
-        </li>
-      </ol>
-    </div>
-  </section><!-- CH.03 THE THREAD -->
-  <section class="thread" id="thread">
-    <div class="wrap">
-      <header class="section-head reveal">
-        <p class="eyebrow">CH.03 &mdash; The Thread</p>
-        <h2>You talk. We answer.<br />Here&rsquo;s the receipt.</h2>
-      </header>
-
-      <div class="thread-layout">
-        <div class="receipt reveal" aria-label="Sample BraggAI conversation">
-          <div class="receipt-head">
-            <span>BRAGGAI &mdash; SESSION #9713</span>
-            <span>THE SET / TALLAHASSEE</span>
-          </div>
-          <div class="receipt-row receipt-q"><span class="r-big">YOU</span> best place to eat under six dollars</div>
-          <div class="receipt-punch">&#9632;&#9632;&#9632;&#9632;</div>
-          <div class="receipt-row">
-            <span class="r-big">BRAGG</span>
-            <span class="r-answer">
-              Three runners, depending on the day.
-              <span class="r-inline">1)</span> The Snack Bar on Gamble St. &mdash; the &ldquo;mini&rdquo; plate, $5.50, real meat,
-              open till 9. <span class="r-inline">2)</span> Orange Avenue Market&rsquo;s 4 PM hot bar at $6 &mdash; go after a rush, portions get generous.
-              <span class="r-inline">3)</span> The Commons pizza window while meal plans are closed.
-              All verified today, noon.
-            </span>
-          </div>
-          <div class="receipt-row receipt-src">
-            <span class="r-big">SRC</span> famu dining seasonal menu &#183; updated 09/11 &nbsp;|&nbsp; <b>stamp: HIGH</b>
-          </div>
-          <div class="receipt-row receipt-sig">
-            <span>NO MODEL WAS HALLUCINATED DURING THIS ANSWER.</span>
-            <span class="r-time">t=0.8s</span>
-          </div>
-        </div>
-
-        <div class="thread-side reveal">
-          <p class="thread-side-kicker">THE HOUSE RULES</p>
-          <ul class="rules">
-            <li><span class="rule-no">R1</span><p><b>Plain text, always.</b> BraggAI answers like a person at a front desk, not a press release.</p></li>
-            <li><span class="rule-no">R2</span><p><b>Source stamp on everything.</b> If it can&rsquo;t be verified, it says&hellip; &ldquo;unverified &mdash; ask the front desk, second floor.&rdquo;</p></li>
-            <li><span class="rule-no">R3</span><p><b>Updates weekly.</b> Refreshed with the academic calendar, not a press release cycle.</p></li>
-            <li><span class="rule-no">R4</span><p><b>No &ldquo;as an AI&rdquo; essays.</b> If it needs two paragraphs, it gets trimmed to two lines.</p></li>
-          </ul>
-          <a class="btn btn-line" href="#try">SEE IT LIVE &#8595;</a>
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <!-- CH.04 PROOF -->
-  <section class="proof" id="proof">
-    <div class="wrap">
-      <header class="section-head reveal">
-        <p class="eyebrow">CH.04 &mdash; Proof</p>
-        <h2>The rattlers who stopped asking the group chat</h2>
-      </header>
-
-      <div class="proof-grid">
-        <figure class="testimonial reveal">
-          <figcaption class="t-head">K. &rsquo;28 <span class="t-tag">PRE-MED</span></figcaption>
-          <blockquote>&ldquo;I asked where the July graduation proofs were and got the exact building, floor, and email in one message. My advisor stared at me.&rdquo;</blockquote>
-          <p class="t-stamp">stamp: real human</p>
-        </figure>
-        <figure class="testimonial reveal">
-          <figcaption class="t-head">D. &rsquo;27 <span class="t-tag">CEEN</span></figcaption>
-          <blockquote>&ldquo;BraggAI is the only reason I found out about the Commons taco window. That is a top-five dining discovery of my life.&rdquo;</blockquote>
-          <p class="t-stamp">stamp: real human</p>
-        </figure>
-        <figure class="testimonial reveal">
-          <figcaption class="t-head">J. &rsquo;29 <span class="t-tag">SHUTTLE NOVICE</span></figcaption>
-          <blockquote>&ldquo;First week here, asked &lsquo;what is this purple zone situation.&rsquo; Got parking history, the scanner etiquette, and a map link. Sorted.&rdquo;</blockquote>
-          <p class="t-stamp">stamp: real human</p>
-        </figure>
-      </div>
-    </div>
-  </section><!-- CH.05 FAQ -->
-  <section class="faq" id="faq">
-    <div class="wrap faq-wrap">
-      <header class="section-head reveal">
-        <p class="eyebrow">CH.05 &mdash; FAQ</p>
-        <h2>The four questions<br />about the bot</h2>
-      </header>
-
-      <div class="faq-list" id="faq-list">
-        <details class="faq-item reveal">
-          <summary><span class="faq-q">Is this the official FAMU bot?</span><span class="faq-plus">+</span></summary>
-          <p>No. BraggAI is an unofficial, student-made resource project. It is not operated by Florida A&amp;M University and is not endorsed by the university. Think of it as a really well-read hall mate.</p>
-        </details>
-        <details class="faq-item reveal">
-          <summary><span class="faq-q">Is my identity kept private?</span><span class="faq-plus">+</span></summary>
-          <p>Sessions are anonymous. We do not collect student IDs, emails, or history that ties a question to a person. We keep aggregate counts &mdash; like &ldquo;4120 answers on file&rdquo; &mdash; and nothing more.</p>
-        </details>
-        <details class="faq-item reveal">
-          <summary><span class="faq-q">How current is the information?</span><span class="faq-plus">+</span></summary>
-          <p>Every answer carries a source and a date-stamp. Sources are cross-checked against official FAMU pages and staff-verified bulletins, then refreshed weekly against the academic calendar. Semester changes &mdash; dining hours, shuttle runs, game-day roads &mdash; get priority re-checks.</p>
-        </details>
-        <details class="faq-item reveal">
-          <summary><span class="faq-q">I found a wrong answer. What do I do?</span><span class="faq-plus">+</span></summary>
-          <p>Flag it. There&rsquo;s a correction slip on every answer card. Each flag is read by a human, week-of. The title for the semester belongs to whoever files the best correction.</p>
-        </details>
-      </div>
-    </div>
-  </section>
-
-  <!-- CH.06 TRY -->
-  <section class="try" id="try">
-    <div class="wrap">
-      <div class="try-frame reveal">
-        <p class="eyebrow ey-light">CH.06 &mdash; Joining the Set</p>
-        <h2>Ask anything.<br />Get a real answer.</h2>
-        <p class="try-sub">Anonymous. Fast. Stamped with sources. Built for FAMU students and no one else.</p>
-
-        <form class="ask-box" id="ask-box" autocomplete="off">
-          <label class="sr-only" for="ask-input">Ask BraggAI a question</label>
-          <input id="ask-input" name="ask" type="text" placeholder="e.g. when is the last shuttle on game day?" />
-          <button type="submit" class="btn btn-send">ASK <span class="arrows">&#8594;</span></button>
-        </form>
-
-        <div class="ask-reply" id="ask-reply" aria-live="polite"></div>
-
-        <p class="try-foot">
-          <span class="sq">&#9632;</span> BRAVO FILES KEEP ACCUMULATING. RATTLER PRIDE INTACT.
+      <article class="step">
+        <span class="step-num">02</span>
+        <h3 class="step-title">Who handles it?</h3>
+        <p class="step-body">
+          The correct department, office, person, phone number, email and hours — instantly.
         </p>
+      </article>
+
+      <article class="step">
+        <span class="step-num">03</span>
+        <h3 class="step-title">What do I do next?</h3>
+        <p class="step-body">
+          A clear next step. A form. A redirect to the right secure FAMU system. No dead ends.
+        </p>
+      </article>
+    </div>
+  </section>
+
+  <!-- ============================================================
+       CAMPUS STATUS
+       ============================================================ -->
+  <section class="section" id="status">
+    <div class="section-head">
+      <p class="eyebrow">Campus status</p>
+      <h2 class="section-title">Everything running, nothing on fire.</h2>
+      <p class="section-lede">Updated live as university systems report in.</p>
+    </div>
+
+    <div class="grid grid-4">
+      <div class="status">
+        <span class="status-dot is-ok"></span>
+        <span class="status-name">iRattler</span>
+        <span class="status-state">Operational</span>
       </div>
+      <div class="status">
+        <span class="status-dot is-ok"></span>
+        <span class="status-name">Canvas</span>
+        <span class="status-state">Operational</span>
+      </div>
+      <div class="status">
+        <span class="status-dot is-warn"></span>
+        <span class="status-name">FAMU Email</span>
+        <span class="status-state">Partial disruption</span>
+      </div>
+      <div class="status">
+        <span class="status-dot is-ok"></span>
+        <span class="status-name">Campus Wi-Fi</span>
+        <span class="status-state">Operational</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============================================================
+       DEPARTMENTS
+       ============================================================ -->
+  <section class="section section-alt" id="departments">
+    <div class="section-head">
+      <p class="eyebrow">Directory</p>
+      <h2 class="section-title">Every office. Every number. One place.</h2>
+    </div>
+
+    <div class="directory">
+      <a class="dir-row" href="#">
+        <span class="dir-name">Registrar</span>
+        <span class="dir-meta">(850) 599-3000 · registrar@famu.edu</span>
+        <span class="dir-arrow">→</span>
+      </a>
+      <a class="dir-row" href="#">
+        <span class="dir-name">Financial Aid</span>
+        <span class="dir-meta">(850) 599-3730 · finaid@famu.edu</span>
+        <span class="dir-arrow">→</span>
+      </a>
+      <a class="dir-row" href="#">
+        <span class="dir-name">Housing &amp; Residential Life</span>
+        <span class="dir-meta">(850) 599-3651 · housing@famu.edu</span>
+        <span class="dir-arrow">→</span>
+      </a>
+      <a class="dir-row" href="#">
+        <span class="dir-name">Information Technology Services</span>
+        <span class="dir-meta">(850) 412-HELP · its@famu.edu</span>
+        <span class="dir-arrow">→</span>
+      </a>
+      <a class="dir-row" href="#">
+        <span class="dir-name">Student Health Services</span>
+        <span class="dir-meta">(850) 599-3777 · health@famu.edu</span>
+        <span class="dir-arrow">→</span>
+      </a>
+      <a class="dir-row" href="#">
+        <span class="dir-name">Counseling Services</span>
+        <span class="dir-meta">(850) 599-3145 · counseling@famu.edu</span>
+        <span class="dir-arrow">→</span>
+      </a>
+      <a class="dir-row" href="#">
+        <span class="dir-name">FAMU Police Department</span>
+        <span class="dir-meta">Emergency: 911 · Non-emergency: (850) 599-3256</span>
+        <span class="dir-arrow">→</span>
+      </a>
+      <a class="dir-row" href="#">
+        <span class="dir-name">Office of the Ombuds</span>
+        <span class="dir-meta">(850) 599-3400 · ombuds@famu.edu</span>
+        <span class="dir-arrow">→</span>
+      </a>
+    </div>
+  </section>
+
+  <!-- ============================================================
+       CTA
+       ============================================================ -->
+  <section class="section cta">
+    <div class="cta-inner">
+      <p class="eyebrow">Ready when you are</p>
+      <h2 class="cta-title">I have a problem. Let's find who handles it.</h2>
+      <a href="#ask" class="btn btn-primary btn-lg">Ask BraggAI →</a>
     </div>
   </section>
 
 </main>
 
-<!-- FOOTER -->
 <footer class="footer">
-  <div class="wrap">
-    <div class="footer-top">
-      <p class="footer-wordmark">BRAGGA<span class="orange">·</span>I</p>
-      <p class="footer-tag">A STUDENT BOT FOR THE SET.<br />MADE AT THE CORNER OF WAHNISH &amp; MLK.</p>
-      <a class="btn btn-foot" href="#top">BACK TO TOP &#8593;</a>
-    </div>
-
-    <div class="footer-mid">
-      <div class="footer-ch">
-        <p class="footer-ch-head">THE INDEX</p>
-        <ul>
-          <li><a href="#index">Housing &amp; move-in</a></li>
-          <li><a href="#index">Dining &amp; Rattler Bucks</a></li>
-          <li><a href="#index">Transit &amp; parking</a></li>
-          <li><a href="#index">Health &amp; safety</a></li>
-        </ul>
-      </div>
-      <div class="footer-ch">
-        <p class="footer-ch-head">THE BOT</p>
-        <ul>
-          <li><a href="#how">How it works</a></li>
-          <li><a href="#thread">The thread</a></li>
-          <li><a href="#faq">FAQ</a></li>
-          <li><a href="#try">Try BraggAI</a></li>
-        </ul>
-      </div>
-      <div class="footer-ch">
-        <p class="footer-ch-head">OUTSIDE THE SET</p>
-        <ul>
-          <li><a href="https://www.famu.edu" target="_blank" rel="noopener">famu.edu ↗</a></li>
-          <li><a href="https://www.famu.edu/healthandsafety" target="_blank" rel="noopener">FAMU alerts ↗</a></li>
-        </ul>
-      </div>
-      <div class="footer-direct">
-        <p class="footer-ch-head">EMERGENCY / DIRECT</p>
-        <ul>
-          <li>FAMU Police — <a href="tel:+18505994256">850.599.3256</a></li>
-          <li>Safe Ride — <a href="tel:+18505993120">850.599.3120</a></li>
-          <li>Counseling Services — <a href="tel:+18505992494">850.599.2494</a>&nbsp;(24h)</li>
-        </ul>
-        <p class="footer-note">An unofficial student project. Not affiliated with or endorsed by Florida A&amp;M University. Colored orange &amp; green out of respect.</p>
-      </div>
-    </div>
-
-    <div class="footer-bottom">
-      <p>&copy; <span id="year">2026</span> BRAGGAI&hellip; BE KIND. READ THE ROOM. DRINK WATER.</p>
-      <p>PRINTED ON THE SET &mdash; WET SEASON EDITION &rsquo;26</p>
-    </div>
+  <div class="footer-inner">
+    <p>BraggAI · A student-first reimagining of FAMU.edu</p>
+    <p class="footer-small">Rattler Nation. Est. 1887.</p>
   </div>
 </footer>
 
-<script src="js/main.js"></script>
+<!-- ============================================================
+     AUTH MODAL
+     ============================================================ -->
+<div class="auth-overlay" id="auth-overlay" aria-hidden="true">
+  <div class="auth-modal" role="dialog" aria-modal="true" aria-labelledby="auth-title">
+
+    <button class="auth-close" id="auth-close" type="button" aria-label="Close">
+      <span></span><span></span>
+    </button>
+
+    <div class="auth-tabs">
+      <button class="auth-tab is-active" type="button" data-tab="login">Log in</button>
+      <button class="auth-tab" type="button" data-tab="signup">Sign up</button>
+    </div>
+
+    <!-- LOGIN -->
+    <form class="auth-panel is-active" id="auth-login" data-panel="login" novalidate>
+      <p class="eyebrow">Welcome back</p>
+      <h2 class="auth-title" id="auth-title">Log in to BraggAI</h2>
+
+      <label class="auth-field">
+        <span>Email</span>
+        <input type="email" name="email" id="login-email" autocomplete="email" placeholder="you@famu.edu" required>
+      </label>
+
+      <label class="auth-field">
+        <span>Password</span>
+        <input type="password" name="password" id="login-password" autocomplete="current-password" placeholder="••••••••" required>
+      </label>
+
+      <p class="auth-error" id="login-error" hidden></p>
+
+      <button type="submit" class="btn btn-primary auth-submit">Log in →</button>
+
+      <p class="auth-foot">
+        No account?
+        <button type="button" class="auth-link" data-goto="signup">Sign up</button>
+      </p>
+    </form>
+
+    <!-- SIGNUP -->
+    <form class="auth-panel" id="auth-signup" data-panel="signup" novalidate>
+      <p class="eyebrow">New here</p>
+      <h2 class="auth-title">Create your account</h2>
+
+      <label class="auth-field">
+        <span>Name</span>
+        <input type="text" name="name" id="signup-name" autocomplete="name" placeholder="Your name" required>
+      </label>
+
+      <label class="auth-field">
+        <span>Email</span>
+        <input type="email" name="email" id="signup-email" autocomplete="email" placeholder="you@famu.edu" required>
+      </label>
+
+      <label class="auth-field">
+        <span>Password</span>
+        <input type="password" name="password" id="signup-password" autocomplete="new-password" placeholder="At least 8 characters" minlength="8" required>
+      </label>
+
+      <p class="auth-error" id="signup-error" hidden></p>
+
+      <button type="submit" class="btn btn-primary auth-submit">Create account →</button>
+
+      <p class="auth-foot">
+        Already have one?
+        <button type="button" class="auth-link" data-goto="login">Log in</button>
+      </p>
+    </form>
+
+    <!-- LOGGED IN -->
+    <div class="auth-panel" id="auth-account" data-panel="account">
+      <p class="eyebrow">Signed in</p>
+      <h2 class="auth-title" id="account-name">—</h2>
+      <p class="auth-email" id="account-email">—</p>
+      <button type="button" class="btn btn-primary auth-submit" id="auth-logout">Log out</button>
+    </div>
+
+  </div>
+</div>
+
+<!-- ============================================================
+     SCRIPTS
+     ============================================================ -->
+<script src="js/auth.js" defer></script>
+<script src="js/main.js" defer></script>
+
 </body>
 </html>

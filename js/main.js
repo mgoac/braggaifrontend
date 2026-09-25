@@ -1,194 +1,192 @@
 /* ============================================================
-   BRAGGAI — landing interactions
-   ticker seed · scroll reveal · counters · teletype · ask demo
+   BRAGGAI — MAIN
+   ask box · chips · answer panel · auth gating
    ============================================================ */
 (function () {
   "use strict";
 
-  /* ---------------- helpers ---------------- */
-  const $ = (sel, root) => (root || document).querySelector(sel);
-  const $$ = (sel, root) => Array.from((root || document).querySelectorAll(sel));
-  const rand = (min, max) => Math.floor(Math.random() * (max - min + 1)) + min;
-  const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-  const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+  const $  = (s, r) => (r || document).querySelector(s);
+  const $$ = (s, r) => Array.from((r || document).querySelectorAll(s));
 
-  /* ---------------- 1. ticker tape ---------------- */
-  const TICKER_TERMS = [
-    "ORANGE & GREEN",
-    "THE SET",
-    "WAGON DROPPED",
-    "MARCHING 100",
-    "OOPS",
-    "GAME DAY",
-    "THIRD AVENUE",
-    "SUGAR FOOT",
-    "GATHER AT THE GATE",
-    "FAMU STILL KNOCKS",
-    "RATTLER PRIDE",
-    "HIGH OVER THE SET",
+  const form    = $("#ask-form");
+  const input   = $("#ask-input");
+  const answer  = $("#ask-answer");
+  const aSource = $("#answer-source");
+  const aBody   = $("#answer-body");
+  const aActions= $("#answer-actions");
+  const aClose  = $("#answer-close");
+
+  if (!form || !input) return;
+
+  /* ============================================================
+     tiny knowledge base — replace with real API / vector search
+     ============================================================ */
+  const KB = [
+    {
+      match: ["register", "registration", "class", "enroll", "hold"],
+      source: "FAMU Office of the Registrar",
+      body: "Registration is handled by the Office of the Registrar. If you have a hold blocking enrollment, most holds are cleared by the office that placed them — Financial Aid, Student Accounts, or the Registrar directly.",
+      actions: [
+        { label: "Call Registrar",  href: "tel:+18505993000" },
+        { label: "Email Registrar", href: "mailto:registrar@famu.edu" },
+        { label: "Open iRattler",   href: "https://irattler.famu.edu" },
+      ],
+    },
+    {
+      match: ["financial aid", "fafsa", "disburse", "scholarship", "finaid"],
+      source: "FAMU Office of Financial Aid",
+      body: "Financial Aid handles FAFSA, verification, disbursement and scholarships. If your aid hasn't disbursed, check your iRattler account for outstanding requirements first — most delays are unresolved verification items.",
+      actions: [
+        { label: "Call Financial Aid",  href: "tel:+18505993730" },
+        { label: "Email Financial Aid", href: "mailto:finaid@famu.edu" },
+        { label: "Open iRattler",       href: "https://irattler.famu.edu" },
+      ],
+    },
+    {
+      match: ["housing", "dorm", "residence", "roommate", "dining"],
+      source: "FAMU Housing & Residential Life",
+      body: "Housing handles residence halls, applications, maintenance requests and dining resources. For maintenance, submit through the housing portal so it's tracked.",
+      actions: [
+        { label: "Call Housing",  href: "tel:+18505993651" },
+        { label: "Email Housing", href: "mailto:housing@famu.edu" },
+      ],
+    },
+    {
+      match: ["wifi", "wi-fi", "email", "canvas", "irattler", "password", "login", "technology", "it "],
+      source: "FAMU Information Technology Services",
+      body: "ITS handles FAMU email, Canvas, iRattler, Wi-Fi and account issues. Password resets can be done through the ITS self-service portal.",
+      actions: [
+        { label: "Call ITS Help Desk", href: "tel:+18504124357" },
+        { label: "Email ITS",          href: "mailto:its@famu.edu" },
+      ],
+    },
+    {
+      match: ["transcript", "enrollment verification", "proof", "records"],
+      source: "FAMU Office of the Registrar",
+      body: "Official transcripts and enrollment verification letters are issued by the Registrar. Most requests can be submitted online through iRattler.",
+      actions: [
+        { label: "Request Transcript", href: "https://irattler.famu.edu" },
+        { label: "Email Registrar",    href: "mailto:registrar@famu.edu" },
+      ],
+    },
+    {
+      match: ["nobody responded", "no response", "emailed", "called", "ignored", "unresolved"],
+      source: "FAMU Office of the Ombuds",
+      body: "If you've contacted an office and haven't received a response, the Office of the Ombuds can help you escalate. Document every contact attempt — dates, names, and methods — before reaching out.",
+      actions: [
+        { label: "Contact Ombuds", href: "mailto:ombuds@famu.edu" },
+        { label: "File a Request", href: "#" },
+      ],
+    },
+    {
+      match: ["counsel", "mental", "therapy", "stress", "anxiety"],
+      source: "FAMU Counseling Services",
+      body: "Counseling Services offers free, confidential support for enrolled students. Walk-ins are accepted during business hours.",
+      actions: [
+        { label: "Call Counseling",  href: "tel:+18505993145" },
+        { label: "Email Counseling", href: "mailto:counseling@famu.edu" },
+      ],
+    },
+    {
+      match: ["emergency", "police", "safety", "unsafe", "crime"],
+      source: "FAMU Police Department",
+      body: "For emergencies call 911. For non-emergency campus safety matters, contact FAMU PD directly.",
+      actions: [
+        { label: "Emergency: 911",        href: "tel:911" },
+        { label: "Non-emergency: FAMU PD", href: "tel:+18505993256" },
+      ],
+    },
   ];
 
-  const tickerTrack = $("#ticker-track");
-  if (tickerTrack) {
-    const segment = TICKER_TERMS.map(
-      (t) => `<span class="ticker-block">${t} <i>&#10035;</i></span>`
-    ).join("");
-    tickerTrack.innerHTML = segment + segment;
-    tickerTrack.style.animationDuration = "34s";
-    if (reduced) tickerTrack.style.animation = "none";
-  }
+  /* ============================================================
+     answer renderer
+     ============================================================ */
+  const findAnswer = (q) => {
+    const text = q.toLowerCase().trim();
+    let best = null;
+    let bestScore = 0;
 
-  /* ---------------- 2. scroll reveal ---------------- */
-  const revealEls = $$(".reveal");
-  if ("IntersectionObserver" in window && !reduced) {
-    const io = new IntersectionObserver(
-      (entries) => {
-        entries.forEach((e) => {
-          if (e.isIntersecting) {
-            e.target.classList.add("in");
-            io.unobserve(e.target);
-          }
-        });
-      },
-      { threshold: 0.12, rootMargin: "0px 0px -6% 0px" }
-    );
-    revealEls.forEach((el) => io.observe(el));
-  } else {
-    revealEls.forEach((el) => el.classList.add("in"));
-  }
-
-  /* ---------------- 3. stat counters ---------------- */
-  const counters = $$(".count");
-  const animateCount = (el) => {
-    const target = parseFloat(el.dataset.count);
-    const decimals = parseInt(el.dataset.decimals || "0", 10);
-    const dur = 900;
-    const start = performance.now();
-    const tick = (now) => {
-      const p = Math.min((now - start) / dur, 1);
-      const eased = 1 - Math.pow(1 - p, 3);
-      const val = target * eased;
-      el.textContent = decimals ? val.toFixed(decimals) : Math.floor(val).toLocaleString();
-      if (p < 1) requestAnimationFrame(tick);
-    };
-    requestAnimationFrame(tick);
+    for (const entry of KB) {
+      let score = 0;
+      for (const k of entry.match) {
+        if (text.includes(k)) score += k.length;
+      }
+      if (score > bestScore) { bestScore = score; best = entry; }
+    }
+    return best;
   };
 
-  if ("IntersectionObserver" in window && !reduced) {
-    const cio = new IntersectionObserver(
-      (entries) => {
-        entries.forEach((e) => {
-          if (e.isIntersecting) {
-            animateCount(e.target);
-            cio.unobserve(e.target);
-          }
-        });
-      },
-      { threshold: 0.4 }
-    );
-    counters.forEach((el) => cio.observe(el));
-  } else {
-    counters.forEach((el) => animateCount(el));
-  }
+  const fallback = (q) => ({
+    source: "BraggAI",
+    body: `I couldn't find an official FAMU source confirming a match for "${q}". Try one of the quick-access categories above, or contact the Office of the Ombuds if you're not sure who handles it.`,
+    actions: [
+      { label: "Contact Ombuds", href: "mailto:ombuds@famu.edu" },
+    ],
+  });
 
-  /* ---------------- 4. hero teletype ---------------- */
-  const SCRIPT = [
-    {
-      q: "Q: What time does the Orange Line last shuttle run on Friday?",
-      a: "\u25c9 Last campus-loop pull-out is 9:40 PM from the Gibbs Hall stop on Friday. After that it\u2019s Safe Ride \u2014 850.599.3120.",
-    },
-    {
-      q: "Q: Where can I print a 60-page paper tonight?",
-      a: "\u25c9 Coleman Library is open until 2 AM during exam week. Third floor east wing, 8\u00a2/side with your Rattler Card. Avoid printer #4 \u2014 it eats duplexed trays.",
-    },
-    {
-      q: "Q: Is the commons open during spring break?",
-      a: "\u25c9 Reduced hours: 8 AM\u20132 PM weekdays only, chill-menu style. Snack Bar stays on the full schedule. Stamp: MEDIUM \u2014 re-check on Feb 28.",
-    },
-  ];
+  const renderAnswer = (entry, q) => {
+    aSource.textContent = "Source · " + entry.source;
+    aBody.textContent   = entry.body;
+    aActions.innerHTML  = "";
 
-  const tty = $("#teletype");
-  if (tty) {
-    const cycle = async () => {
-      for (const item of SCRIPT) {
-        const qEl = document.createElement("div");
-        qEl.className = "tty-line tty-q";
-        qEl.textContent = item.q;
-        tty.appendChild(qEl);
-
-        const aEl = document.createElement("div");
-        aEl.className = "tty-line tty-a";
-        tty.appendChild(aEl);
-
-        tty.scrollTop = tty.scrollHeight;
-
-        for (let i = 0; i < item.a.length; i++) {
-          aEl.textContent += item.a[i];
-          tty.scrollTop = tty.scrollHeight;
-          await sleep(rand(6, 26));
-        }
-        await sleep(1600);
-      }
-      await sleep(500);
-      cycle();
-    };
-
-    if (reduced) {
-      tty.innerHTML = `<div class="tty-line tty-q">${SCRIPT[0].q}</div><div class="tty-line tty-a">${SCRIPT[0].a}</div>`;
-    } else {
-      cycle();
-    }
-  }
-
-  /* ---------------- 5. ask demo ---------------- */
-  const REPLIES = [
-    "Verified: the last Orange Line pull-out is 9:40 PM at Gibbs Hall, Fridays. Safe Ride picks up after \u2014 850.599.3120. Stamp: HIGH.",
-    "Coleman Library, 3rd floor east wing, open till 2 AM Exam Week. 8\u00a2/side with Rattler Card. Skip printer #4. Stamp: HIGH.",
-    "The Snack Bar \u2014 mini plate, $5.50, on Gamble St. Real meat, open till 9. Stamp: HIGH. It was verified this morning.",
-    "Per the registrar's memo: final drop deadline is the Friday before spring break week. File online, then email your adviser to confirm. Stamp: MEDIUM.",
-  ];
-  let replyIdx = 0;
-
-  const form = $("#ask-box");
-  const input = $("#ask-input");
-  const replyBox = $("#ask-reply");
-  if (form && input && replyBox) {
-    form.addEventListener("submit", (e) => {
-      e.preventDefault();
-      const text = input.value.trim();
-      if (!text) return;
-
-      const qLine = document.createElement("span");
-      qLine.className = "r-q";
-      qLine.textContent = "\u25b8 you: " + text;
-      updateReply(qLine);
-
-      const typingEl = document.createElement("span");
-      typingEl.textContent = "\u25cf thinking on the Set\u2026";
-      typingEl.style.opacity = "0.6";
-      updateReply(typingEl);
-
-      const answer = REPLIES[replyIdx % REPLIES.length];
-      replyIdx++;
-
-      setTimeout(() => {
-        typingEl.remove();
-        const aLine = document.createElement("span");
-        aLine.className = "r-a";
-        aLine.textContent = "bragg \u25b8 " + answer;
-        updateReply(aLine);
-      }, 700);
-
-      input.value = "";
+    entry.actions.forEach((a) => {
+      const el = document.createElement("a");
+      el.className = "btn";
+      el.href = a.href;
+      el.textContent = a.label + " →";
+      if (a.href.startsWith("http")) { el.target = "_blank"; el.rel = "noopener"; }
+      aActions.appendChild(el);
     });
 
-    function updateReply(el) {
-      while (replyBox.children.length >= 5) replyBox.removeChild(replyBox.firstChild);
-      replyBox.appendChild(el);
-    }
+    answer.hidden = false;
+    answer.scrollIntoView({ behavior: "smooth", block: "nearest" });
+  };
+
+  /* ============================================================
+     submit handler
+     ============================================================ */
+  form.addEventListener("submit", (e) => {
+    e.preventDefault();
+    const q = input.value.trim();
+    if (!q) return;
+
+    const hit = findAnswer(q);
+    renderAnswer(hit || fallback(q), q);
+  });
+
+  /* ============================================================
+     chip handler
+     ============================================================ */
+  $$(".chip").forEach((chip) => {
+    chip.addEventListener("click", () => {
+      input.value = chip.dataset.q;
+      input.focus();
+      form.requestSubmit();
+    });
+  });
+
+  /* ============================================================
+     close answer
+     ============================================================ */
+  if (aClose) {
+    aClose.addEventListener("click", () => {
+      answer.hidden = true;
+      input.value = "";
+      input.focus();
+    });
   }
 
-  /* ---------------- 6. footer year ---------------- */
-  const yearEl = $("#year");
-  if (yearEl) yearEl.textContent = String(new Date().getFullYear());
+  /* ============================================================
+     auth gating — require login before answering
+     ============================================================ */
+  const auth = window.BraggAI && window.BraggAI.auth;
+  if (auth) {
+    form.addEventListener("submit", (e) => {
+      if (!auth.isLoggedIn()) {
+        e.preventDefault();
+        e.stopImmediatePropagation();
+        auth.open();
+      }
+    }, true);
+  }
 })();
