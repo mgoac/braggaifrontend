@@ -12,7 +12,6 @@
   const STORE_KEY = "braggai.session";
   const USERS_KEY = "braggai.users";
 
-  /* ---------------- storage ---------------- */
   const saveSession = (user) => localStorage.setItem(STORE_KEY, JSON.stringify(user));
   const readSession = () => {
     try { return JSON.parse(localStorage.getItem(STORE_KEY)); }
@@ -26,12 +25,8 @@
   };
   const writeUsers = (u) => localStorage.setItem(USERS_KEY, JSON.stringify(u));
 
-  /* ============================================================
-     API LAYER — replace these stubs with real backend calls
-     ============================================================ */
   const API = {
     async login(email, password) {
-      // POST /api/auth/login  { email, password }
       const users = readUsers();
       const found = users.find(
         (u) => u.email.toLowerCase() === email.toLowerCase() && u.password === password
@@ -41,7 +36,6 @@
     },
 
     async signup(name, email, password) {
-      // POST /api/auth/signup  { name, email, password }
       const users = readUsers();
       if (users.some((u) => u.email.toLowerCase() === email.toLowerCase())) {
         throw new Error("That email is already registered.");
@@ -53,12 +47,10 @@
     },
 
     async logout() {
-      // POST /api/auth/logout
       return true;
     },
   };
 
-  /* ---------------- elements ---------------- */
   const overlay    = $("#auth-overlay");
   const openBtn    = $("#auth-open");
   const closeBtn   = $("#auth-close");
@@ -70,7 +62,6 @@
 
   if (!overlay || !openBtn) return;
 
-  /* ---------------- helpers ---------------- */
   const showPanel = (name) => {
     panels.forEach((p) => p.classList.toggle("is-active", p.dataset.panel === name));
     tabs.forEach((t) => t.classList.toggle("is-active", t.dataset.tab === name));
@@ -109,7 +100,6 @@
     }
   };
 
-  /* ---------------- events ---------------- */
   openBtn.addEventListener("click", openAuth);
   closeBtn.addEventListener("click", closeAuth);
   overlay.addEventListener("click", (e) => { if (e.target === overlay) closeAuth(); });
@@ -133,7 +123,6 @@
     })
   );
 
-  /* ---------------- login ---------------- */
   loginForm.addEventListener("submit", async (e) => {
     e.preventDefault();
     const email    = $("#login-email").value.trim();
@@ -161,7 +150,6 @@
     }
   });
 
-  /* ---------------- signup ---------------- */
   signupForm.addEventListener("submit", async (e) => {
     e.preventDefault();
     const name     = $("#signup-name").value.trim();
@@ -191,7 +179,6 @@
     }
   });
 
-  /* ---------------- logout ---------------- */
   logoutBtn.addEventListener("click", async () => {
     await API.logout();
     clearSession();
@@ -199,10 +186,8 @@
     showPanel("login");
   });
 
-  /* ---------------- boot ---------------- */
   paintSession();
 
-  /* expose for main.js and other modules */
   window.BraggAI = window.BraggAI || {};
   window.BraggAI.auth = {
     isLoggedIn: () => !!readSession(),

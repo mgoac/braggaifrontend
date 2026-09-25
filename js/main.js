@@ -19,7 +19,7 @@
   if (!form || !input) return;
 
   /* ============================================================
-     tiny knowledge base — replace with real API / vector search
+     knowledge base — replace with real API / vector search
      ============================================================ */
   const KB = [
     {
@@ -27,8 +27,8 @@
       source: "FAMU Office of the Registrar",
       body: "Registration is handled by the Office of the Registrar. If you have a hold blocking enrollment, most holds are cleared by the office that placed them — Financial Aid, Student Accounts, or the Registrar directly.",
       actions: [
-        { label: "Call Registrar",  href: "tel:+18505993000" },
-        { label: "Email Registrar", href: "mailto:registrar@famu.edu" },
+        { label: "Call Registrar",  href: "tel:+18505993115" },
+        { label: "Email Registrar", href: "mailto:registrardocs@famu.edu" },
         { label: "Open iRattler",   href: "https://irattler.famu.edu" },
       ],
     },
@@ -38,7 +38,7 @@
       body: "Financial Aid handles FAFSA, verification, disbursement and scholarships. If your aid hasn't disbursed, check your iRattler account for outstanding requirements first — most delays are unresolved verification items.",
       actions: [
         { label: "Call Financial Aid",  href: "tel:+18505993730" },
-        { label: "Email Financial Aid", href: "mailto:finaid@famu.edu" },
+        { label: "Email Financial Aid", href: "mailto:financialaiddocs@famu.edu" },
         { label: "Open iRattler",       href: "https://irattler.famu.edu" },
       ],
     },
@@ -66,7 +66,7 @@
       body: "Official transcripts and enrollment verification letters are issued by the Registrar. Most requests can be submitted online through iRattler.",
       actions: [
         { label: "Request Transcript", href: "https://irattler.famu.edu" },
-        { label: "Email Registrar",    href: "mailto:registrar@famu.edu" },
+        { label: "Email Registrar",    href: "mailto:registrardocs@famu.edu" },
       ],
     },
     {
@@ -96,11 +96,44 @@
         { label: "Non-emergency: FAMU PD", href: "tel:+18505993256" },
       ],
     },
+    {
+      match: ["library", "study", "quiet", "print", "coleman"],
+      source: "FAMU Libraries",
+      body: "Coleman Memorial Library is open 7:45 AM to 3 AM during exam week. Third floor east wing has printers. 8 cents per side with your Rattler Card. Avoid printer #4.",
+      actions: [
+        { label: "Library Hours", href: "https://library.famu.edu" },
+        { label: "Ask a Librarian", href: "#" },
+      ],
+    },
+    {
+      match: ["shuttle", "bus", "transport", "venom"],
+      source: "FAMU Venom Express Shuttles",
+      body: "Venom Shuttle runs Monday-Friday 6:30 AM to 10:30 PM, Weekends 11 AM to 8 PM. Last campus-loop pull-out is 9:40 PM from Gibbs Hall on Fridays.",
+      actions: [
+        { label: "Shuttle Schedule", href: "https://www.famu.edu" },
+        { label: "Safe Ride", href: "tel:8505993120" },
+      ],
+    },
+    {
+      match: ["career", "job", "internship", "resume"],
+      source: "FAMU Career and Professional Development Center",
+      body: "The Career Center offers resume reviews, mock interviews, career fairs, and job search assistance. Located at CASS Building, Suite 309.",
+      actions: [
+        { label: "Call Career Center", href: "tel:+18505993700" },
+        { label: "Email Career Center", href: "mailto:cpdcenter@famu.edu" },
+      ],
+    },
+    {
+      match: ["health", "doctor", "clinic", "sick", "medical"],
+      source: "FAMU Student Health Services",
+      body: "Student Health Services is located on the first floor of the CASS Building. Walk-ins accepted for immunizations, illness, and injury. Appointments required for other services.",
+      actions: [
+        { label: "Call Health Services", href: "tel:+18505993777" },
+        { label: "Health Portal", href: "https://famu.edu" },
+      ],
+    },
   ];
 
-  /* ============================================================
-     answer renderer
-     ============================================================ */
   const findAnswer = (q) => {
     const text = q.toLowerCase().trim();
     let best = null;
@@ -142,9 +175,6 @@
     answer.scrollIntoView({ behavior: "smooth", block: "nearest" });
   };
 
-  /* ============================================================
-     submit handler
-     ============================================================ */
   form.addEventListener("submit", (e) => {
     e.preventDefault();
     const q = input.value.trim();
@@ -154,9 +184,6 @@
     renderAnswer(hit || fallback(q), q);
   });
 
-  /* ============================================================
-     chip handler
-     ============================================================ */
   $$(".chip").forEach((chip) => {
     chip.addEventListener("click", () => {
       input.value = chip.dataset.q;
@@ -165,9 +192,6 @@
     });
   });
 
-  /* ============================================================
-     close answer
-     ============================================================ */
   if (aClose) {
     aClose.addEventListener("click", () => {
       answer.hidden = true;
@@ -176,9 +200,6 @@
     });
   }
 
-  /* ============================================================
-     auth gating — require login before answering
-     ============================================================ */
   const auth = window.BraggAI && window.BraggAI.auth;
   if (auth) {
     form.addEventListener("submit", (e) => {
