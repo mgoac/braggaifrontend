@@ -37,7 +37,6 @@
     </nav>
 
     <div class="nav-actions">
-      <button class="btn btn-nav btn-auth" id="auth-open" type="button">LOG IN</button>
       <a href="#ask" class="btn btn-primary btn-nav">TRY BRAGGAI</a>
     </div>
   </div>
@@ -630,85 +629,6 @@
   </div>
 </footer>
 
-<!-- ============================================================
-     AUTH MODAL
-     ============================================================ -->
-<div class="auth-overlay" id="auth-overlay" aria-hidden="true">
-  <div class="auth-modal" role="dialog" aria-modal="true" aria-labelledby="auth-title">
-
-    <button class="auth-close" id="auth-close" type="button" aria-label="Close">
-      <span></span><span></span>
-    </button>
-
-    <div class="auth-tabs">
-      <button class="auth-tab is-active" type="button" data-tab="login">Log in</button>
-      <button class="auth-tab" type="button" data-tab="signup">Sign up</button>
-    </div>
-
-    <form class="auth-panel is-active" id="auth-login" data-panel="login" novalidate>
-      <p class="eyebrow">Welcome back</p>
-      <h2 class="auth-title" id="auth-title">Log in to BraggAI</h2>
-
-      <label class="auth-field">
-        <span>Email</span>
-        <input type="email" name="email" id="login-email" autocomplete="email" placeholder="you@famu.edu" required>
-      </label>
-
-      <label class="auth-field">
-        <span>Password</span>
-        <input type="password" name="password" id="login-password" autocomplete="current-password" placeholder="••••••••" required>
-      </label>
-
-      <p class="auth-error" id="login-error" hidden></p>
-
-      <button type="submit" class="btn btn-primary auth-submit">Log in →</button>
-
-      <p class="auth-foot">
-        No account?
-        <button type="button" class="auth-link" data-goto="signup">Sign up</button>
-      </p>
-    </form>
-
-    <form class="auth-panel" id="auth-signup" data-panel="signup" novalidate>
-      <p class="eyebrow">New here</p>
-      <h2 class="auth-title">Create your account</h2>
-
-      <label class="auth-field">
-        <span>Name</span>
-        <input type="text" name="name" id="signup-name" autocomplete="name" placeholder="Your name" required>
-      </label>
-
-      <label class="auth-field">
-        <span>Email</span>
-        <input type="email" name="email" id="signup-email" autocomplete="email" placeholder="you@famu.edu" required>
-      </label>
-
-      <label class="auth-field">
-        <span>Password</span>
-        <input type="password" name="password" id="signup-password" autocomplete="new-password" placeholder="At least 8 characters" minlength="8" required>
-      </label>
-
-      <p class="auth-error" id="signup-error" hidden></p>
-
-      <button type="submit" class="btn btn-primary auth-submit">Create account →</button>
-
-      <p class="auth-foot">
-        Already have one?
-        <button type="button" class="auth-link" data-goto="login">Log in</button>
-      </p>
-    </form>
-
-    <div class="auth-panel" id="auth-account" data-panel="account">
-      <p class="eyebrow">Signed in</p>
-      <h2 class="auth-title" id="account-name">—</h2>
-      <p class="auth-email" id="account-email">—</p>
-      <button type="button" class="btn btn-primary auth-submit" id="auth-logout">Log out</button>
-    </div>
-
-  </div>
-</div>
-
-<script src="js/auth.js" defer></script>
 <script src="js/main.js" defer></script>
 <script src="js/staff.js" defer></script>
 

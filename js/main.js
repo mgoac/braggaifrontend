@@ -1,6 +1,6 @@
 /* ============================================================
    BRAGGAI — MAIN
-   ask box · chips · answer panel · auth gating
+   ask box · chips · answer panel
    ============================================================ */
 (function () {
   "use strict";
@@ -200,14 +200,4 @@
     });
   }
 
-  const auth = window.BraggAI && window.BraggAI.auth;
-  if (auth) {
-    form.addEventListener("submit", (e) => {
-      if (!auth.isLoggedIn()) {
-        e.preventDefault();
-        e.stopImmediatePropagation();
-        auth.open();
-      }
-    }, true);
-  }
 })();
