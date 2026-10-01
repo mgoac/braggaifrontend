@@ -631,6 +631,10 @@
 
 <script src="js/main.js" defer></script>
 <script src="js/staff.js" defer></script>
+<script type="module" src="js/auth.js" defer></script>
 
-</body>
+</body>sed -i '' 's|<script src="js/staff.js" defer></script>
+<script type="module" src="js/auth.js" defer></script>|<script src="js/staff.js" defer></script>\n<script type="module" src="js/auth.js" defer></script>|' index.html
+tail -8 index.html
+nano js/auth.js
 </html>
