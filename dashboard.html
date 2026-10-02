@@ -1,0 +1,372 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>BraggAI — Ask</title>
+<meta name="description" content="Ask BraggAI anything about FAMU. Find the right office, the right form, the right person — instantly." />
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+
+<link rel="stylesheet" href="css/styles.css" />
+
+<style>
+  /* Dashboard-only layer. Reuses the site tokens and components above;
+     only the chat-specific pieces live here. */
+
+  .dash-hero { padding-bottom: clamp(24px, 4vw, 40px); }
+  .dash-hello {
+    font-family: var(--mono);
+    font-size: 0.72rem;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--orange);
+    opacity: 1;
+  }
+
+  .dash-wrap {
+    max-width: 880px;
+    margin: 0 auto;
+    padding: 0 var(--gutter) clamp(60px, 9vw, 100px);
+  }
+
+  /* ---------- chat panel ---------- */
+  .chat {
+    display: flex;
+    flex-direction: column;
+    background: var(--card);
+    border: 2px solid var(--ink);
+  }
+
+  .chat-head {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 16px 22px;
+    background: var(--ink);
+    color: var(--paper);
+  }
+  .chat-dot {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    flex-shrink: 0;
+    background: var(--ok);
+    box-shadow: 0 0 0 3px rgba(46, 125, 50, 0.28);
+  }
+  .chat-name {
+    font-family: var(--serif);
+    font-size: 1.25rem;
+    flex: 1;
+  }
+  .chat-user {
+    font-family: var(--mono);
+    font-size: 0.66rem;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    opacity: 0.65;
+  }
+
+  .chat-log {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    padding: 28px 24px;
+    min-height: 300px;
+    max-height: 52vh;
+    overflow-y: auto;
+  }
+
+  .msg {
+    max-width: 78%;
+    padding: 14px 18px;
+    border: 2px solid var(--ink);
+    font-size: 0.95rem;
+    line-height: 1.5;
+    animation: msgIn 0.22s ease;
+  }
+  @keyframes msgIn {
+    from { opacity: 0; transform: translateY(6px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+  .msg-bot   { background: var(--paper); align-self: flex-start; border-left: 6px solid var(--orange); }
+  .msg-user  { background: var(--ink); color: var(--paper); align-self: flex-end; }
+  .msg-time {
+    display: block;
+    margin-top: 8px;
+    font-family: var(--mono);
+    font-size: 0.6rem;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    opacity: 0.5;
+  }
+
+  .msg-typing { color: var(--orange); font-family: var(--mono); letter-spacing: 0.3em; }
+
+  /* ---------- composer ---------- */
+  .chat-form {
+    max-width: none;
+    margin: 0;
+    padding: 18px 20px 20px;
+    border-top: 2px solid var(--ink);
+  }
+  .ask-bar textarea {
+    flex: 1;
+    min-height: 46px;
+    max-height: 140px;
+    padding: 14px 0;
+    background: transparent;
+    border: none;
+    outline: none;
+    resize: none;
+    font: inherit;
+    font-size: 1rem;
+    line-height: 1.4;
+  }
+  .ask-bar textarea::placeholder { color: rgba(14, 51, 38, 0.42); }
+  .chat-form .ask-chips { justify-content: flex-start; margin-top: 16px; }
+  .chat-hint {
+    margin-top: 14px;
+    font-family: var(--mono);
+    font-size: 0.64rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    opacity: 0.5;
+  }
+</style>
+</head>
+
+<body>
+
+<!-- ============================================================
+     NAV
+     ============================================================ -->
+<header class="nav">
+  <div class="nav-inner">
+
+    <a href="index.html" class="brand">
+      <span class="brand-mark">B</span>
+      <span class="brand-name">BraggAI</span>
+      <span class="brand-sub">FAMU</span>
+    </a>
+
+    <nav class="nav-links" aria-label="Primary">
+      <a href="index.html#how">How it works</a>
+      <a href="index.html#resources">Resources</a>
+      <a href="index.html#directory">Directory</a>
+      <a href="index.html#status">Campus status</a>
+      <a href="index.html#forum">Q&amp;A Forum</a>
+      <a href="index.html#clubs">Clubs</a>
+      <a href="index.html#staff">Staff</a>
+      <a href="index.html#colleges">Colleges</a>
+    </nav>
+
+    <div class="nav-actions">
+      <button type="button" class="btn btn-primary btn-nav" id="nav-ask">ASK BRAGGAI</button>
+    </div>
+
+  </div>
+</header>
+
+<main>
+
+  <!-- ============================================================
+       GREETING
+       ============================================================ -->
+  <section class="hero dash-hero">
+    <div class="hero-grain" aria-hidden="true"></div>
+    <div class="hero-inner">
+      <p class="eyebrow">Florida A&amp;M University · Digital Front Door</p>
+
+      <h1 class="hero-title">
+        <span class="line">How can I help</span>
+        <span class="line line-accent">you today?</span>
+      </h1>
+
+      <p class="dash-hello" id="welcome">Welcome</p>
+    </div>
+  </section>
+
+  <!-- ============================================================
+       CHAT
+       ============================================================ -->
+  <section class="dash-wrap">
+    <div class="chat">
+      <div class="chat-head">
+        <span class="chat-dot" aria-hidden="true"></span>
+        <span class="chat-name">BraggAI</span>
+        <span class="chat-user" id="chat-user">Online</span>
+      </div>
+
+      <div class="chat-log" id="chat-log" role="log" aria-live="polite" aria-label="Conversation">
+        <div class="msg msg-bot">
+          Go ahead — ask in plain language. I'll find the right office, the right form, and
+          the right next step for you.
+          <span class="msg-time">BraggAI</span>
+        </div>
+      </div>
+
+      <form class="ask chat-form" id="chat-form" autocomplete="off">
+        <div class="ask-bar">
+          <span class="ask-mark" aria-hidden="true">↳</span>
+          <textarea
+            id="chat-input"
+            name="q"
+            rows="1"
+            placeholder="Type your message…"
+            aria-label="Type your message"
+          ></textarea>
+          <button type="submit" class="btn btn-primary ask-submit" id="chat-send">Send →</button>
+        </div>
+
+        <div class="ask-chips" aria-label="Example questions">
+          <button type="button" class="chip" data-q="I can't register for my class.">I can't register for my class.</button>
+          <button type="button" class="chip" data-q="Who do I contact about financial aid?">Who handles financial aid?</button>
+          <button type="button" class="chip" data-q="Where do I get my transcript?">Where do I get my transcript?</button>
+          <button type="button" class="chip" data-q="I have a registration hold.">I have a registration hold.</button>
+        </div>
+
+        <p class="chat-hint">Enter to send · Shift + Enter for a new line</p>
+      </form>
+    </div>
+  </section>
+
+</main>
+
+<footer class="footer">
+  <div class="footer-inner">
+    <p>BraggAI · A student-first reimagining of FAMU.edu</p>
+    <p class="footer-small">Rattler Nation. Est. 1887. · Tallahassee, FL</p>
+  </div>
+</footer>
+
+<script type="module" src="js/auth.js"></script>
+<script type="module" src="js/dashboard.js"></script>
+
+<script>
+  (function () {
+    var form  = document.getElementById('chat-form');
+    var log   = document.getElementById('chat-log');
+    var input = document.getElementById('chat-input');
+    var send  = document.getElementById('chat-send');
+    var user  = document.getElementById('chat-user');
+    var welcome = document.getElementById('welcome');
+    if (!form || !log || !input) return;
+
+    var REPLIES = [
+      [/finan|aid|fafsa|scholar/i,
+        "Start with Financial Aid in the Student Services Center at 601 Wahnish Way. (850) 599-3730 or financialaiddocs@famu.edu. Most holds are cleared by submitting your verification items in iRattler."],
+      [/regist|course|class|schedule|hold/i,
+        "That's the Registrar's door — (850) 599-3115, registrardocs@famu.edu, 111 Foote-Hilyer. A registration hold is usually tied to financial aid or student account, so clear that first, then the Registrar can lift it."],
+      [/transcript/i,
+        "The Registrar issues official transcripts. Request one through iRattler or in person at 111 Foote-Hilyer. (850) 599-3115."],
+      [/housing|dorm|room|meal|mealplan/i,
+        "Housing & Residential Life handles it — (850) 599-3651, housing@famu.edu. Dining questions go through the FAMU Dining Hub at 467 Wahnish Way."],
+      [/email|canvas|irattler|wifi|internet|password|account|tech/i,
+        "Information Technology Services is your first stop — (850) 412-HELP or its@famu.edu. They handle FAMU email, Canvas, iRattler, Wi-Fi and account resets."],
+      [/health|sick|counsel|therapy|disab/i,
+        "Student Health Services is in the CASS Building, 1st Floor — (850) 599-3777. Counseling Services is at (850) 599-3145, counseling@famu.edu."],
+      [/grievance|complain|appeal|ombuds|harass/i,
+        "Start with the Office of the Ombuds at (850) 599-3147 (Bryan Smith). Formal academic complaints and escalations move through Student Affairs from there."],
+      [/emergency|safety|police|crime|fire/i,
+        "For anything urgent, call 911. FAMU Police are at (850) 599-3256, 2400 Wahnish Way. Safety information is also posted on the campus status page."],
+      [/professor|faculty|teacher|office hours/i,
+        "Search the Staff Directory on the home page — filter by name or department to see office hours and contact details."]
+    ];
+    var FALLBACK =
+      "Got it. The fastest route is the Office Directory on the home page — it lists every office with a phone number, email and building. If you tell me whether it's about money, classes, housing or tech, I'll point you at the exact desk.";
+
+    function stamp() {
+      return new Date().toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
+    }
+
+    function addMessage(text, who) {
+      var el = document.createElement('div');
+      el.className = 'msg msg-' + who;
+      var time = document.createElement('span');
+      time.className = 'msg-time';
+      time.textContent = (who === 'user' ? 'You' : 'BraggAI') + ' · ' + stamp();
+      el.appendChild(document.createTextNode(text));
+      el.appendChild(time);
+      log.appendChild(el);
+      log.scrollTop = log.scrollHeight;
+      return el;
+    }
+
+    function replyTo(text) {
+      var typing = document.createElement('div');
+      typing.className = 'msg msg-bot msg-typing';
+      typing.textContent = '···';
+      log.appendChild(typing);
+      log.scrollTop = log.scrollHeight;
+
+      send.disabled = true;
+      setTimeout(function () {
+        typing.remove();
+        var body = FALLBACK;
+        for (var i = 0; i < REPLIES.length; i++) {
+          if (REPLIES[i][0].test(text)) { body = REPLIES[i][1]; break; }
+        }
+        addMessage(body, 'bot');
+        send.disabled = false;
+        input.focus();
+      }, 620);
+    }
+
+    function submit(text) {
+      var value = String(text == null ? input.value : text).trim();
+      if (!value) return;
+      input.value = '';
+      input.style.height = 'auto';
+      addMessage(value, 'user');
+      replyTo(value);
+    }
+
+    form.addEventListener('submit', function (e) {
+      e.preventDefault();
+      submit();
+    });
+
+    input.addEventListener('keydown', function (e) {
+      if (e.key === 'Enter' && !e.shiftKey) {
+        e.preventDefault();
+        submit();
+      }
+    });
+
+    input.addEventListener('input', function () {
+      input.style.height = 'auto';
+      input.style.height = Math.min(input.scrollHeight, 140) + 'px';
+    });
+
+    Array.prototype.forEach.call(document.querySelectorAll('.chat-form .chip'), function (chip) {
+      chip.addEventListener('click', function () {
+        submit(chip.getAttribute('data-q'));
+      });
+    });
+
+    var navAsk = document.getElementById('nav-ask');
+    if (navAsk) {
+      navAsk.addEventListener('click', function () {
+        input.focus();
+      });
+    }
+
+    /* dashboard.js fills #welcome with "Welcome, {name}" once auth resolves. */
+    if (welcome && window.MutationObserver) {
+      var sync = function () {
+        var name = (welcome.textContent || '').replace(/^welcome,?\s*/i, '').trim();
+        if (name) user.textContent = name;
+      };
+      new MutationObserver(sync).observe(welcome, { childList: true, characterData: true, subtree: true });
+      sync();
+    }
+
+    input.focus();
+  })();
+</script>
+
+</body>
+</html>

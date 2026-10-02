@@ -176,6 +176,7 @@ document.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeModal
 
 form.addEventListener('submit', async (e) => {
   e.preventDefault();
+  console.log("SIGNUP BUTTON CLICKED");
   err.textContent = '';
   submit.disabled = true;
   try {
@@ -188,6 +189,8 @@ form.addEventListener('submit', async (e) => {
     renderNav(document.getElementById('ba-nav-slot'), me?.user || null);
     closeModal();
     form.reset();
+
+    window.location.href = "dashboard.html";
   } catch (e) {
     err.textContent = e.message || 'Something went wrong.';
   } finally {
