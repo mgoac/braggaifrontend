@@ -74,8 +74,8 @@
     flex-direction: column;
     gap: 14px;
     padding: 28px 24px;
-    min-height: 300px;
-    max-height: 52vh;
+    min-height: min(60vh, 480px);
+    max-height: min(68vh, 560px);
     overflow-y: auto;
   }
 
@@ -103,32 +103,77 @@
     opacity: 0.5;
   }
 
-  .msg-typing { color: var(--orange); font-family: var(--mono); letter-spacing: 0.3em; }
+  /* ---------- typing indicator + streaming caret ---------- */
+  .msg-bubble {
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+  }
+
+  .msg-dots {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    min-height: 22px;
+  }
+  .msg-dots i {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: var(--orange);
+    animation: dotPulse 1.1s ease-in-out infinite;
+  }
+  .msg-dots i:nth-child(2) { animation-delay: 0.16s; }
+  .msg-dots i:nth-child(3) { animation-delay: 0.32s; }
+  @keyframes dotPulse {
+    0%, 60%, 100% { opacity: 0.25; transform: translateY(0); }
+    30%           { opacity: 1;    transform: translateY(-3px); }
+  }
+
+  .msg-caret {
+    display: inline-block;
+    width: 2px;
+    height: 1em;
+    margin-left: 3px;
+    vertical-align: -0.16em;
+    background: var(--orange);
+    animation: caretBlink 0.9s steps(2, start) infinite;
+  }
+  @keyframes caretBlink {
+    0%, 100% { opacity: 1; }
+    50%      { opacity: 0; }
+  }
+
+  .msg-error { border-color: var(--bad); }
+  .msg-error .msg-bubble { color: var(--bad); }
+
+  @media (prefers-reduced-motion: reduce) {
+    .msg, .msg-dots i, .msg-caret { animation: none; }
+  }
 
   /* ---------- composer ---------- */
   .chat-form {
     max-width: none;
     margin: 0;
-    padding: 18px 20px 20px;
+    padding: 20px 22px 22px;
     border-top: 2px solid var(--ink);
   }
   .ask-bar textarea {
     flex: 1;
-    min-height: 46px;
-    max-height: 140px;
-    padding: 14px 0;
+    min-height: 56px;
+    max-height: 200px;
+    padding: 16px 0;
     background: transparent;
     border: none;
     outline: none;
     resize: none;
     font: inherit;
-    font-size: 1rem;
-    line-height: 1.4;
+    font-size: 1.02rem;
+    line-height: 1.45;
   }
   .ask-bar textarea::placeholder { color: rgba(14, 51, 38, 0.42); }
-  .chat-form .ask-chips { justify-content: flex-start; margin-top: 16px; }
+  .chat-form .ask-chips { justify-content: flex-start; margin-top: 18px; }
   .chat-hint {
-    margin-top: 14px;
+    margin-top: 16px;
     font-family: var(--mono);
     font-size: 0.64rem;
     letter-spacing: 0.1em;
@@ -255,73 +300,158 @@
     var welcome = document.getElementById('welcome');
     if (!form || !log || !input) return;
 
-    var REPLIES = [
-      [/finan|aid|fafsa|scholar/i,
-        "Start with Financial Aid in the Student Services Center at 601 Wahnish Way. (850) 599-3730 or financialaiddocs@famu.edu. Most holds are cleared by submitting your verification items in iRattler."],
-      [/regist|course|class|schedule|hold/i,
-        "That's the Registrar's door — (850) 599-3115, registrardocs@famu.edu, 111 Foote-Hilyer. A registration hold is usually tied to financial aid or student account, so clear that first, then the Registrar can lift it."],
-      [/transcript/i,
-        "The Registrar issues official transcripts. Request one through iRattler or in person at 111 Foote-Hilyer. (850) 599-3115."],
-      [/housing|dorm|room|meal|mealplan/i,
-        "Housing & Residential Life handles it — (850) 599-3651, housing@famu.edu. Dining questions go through the FAMU Dining Hub at 467 Wahnish Way."],
-      [/email|canvas|irattler|wifi|internet|password|account|tech/i,
-        "Information Technology Services is your first stop — (850) 412-HELP or its@famu.edu. They handle FAMU email, Canvas, iRattler, Wi-Fi and account resets."],
-      [/health|sick|counsel|therapy|disab/i,
-        "Student Health Services is in the CASS Building, 1st Floor — (850) 599-3777. Counseling Services is at (850) 599-3145, counseling@famu.edu."],
-      [/grievance|complain|appeal|ombuds|harass/i,
-        "Start with the Office of the Ombuds at (850) 599-3147 (Bryan Smith). Formal academic complaints and escalations move through Student Affairs from there."],
-      [/emergency|safety|police|crime|fire/i,
-        "For anything urgent, call 911. FAMU Police are at (850) 599-3256, 2400 Wahnish Way. Safety information is also posted on the campus status page."],
-      [/professor|faculty|teacher|office hours/i,
-        "Search the Staff Directory on the home page — filter by name or department to see office hours and contact details."]
-    ];
-    var FALLBACK =
-      "Got it. The fastest route is the Office Directory on the home page — it lists every office with a phone number, email and building. If you tell me whether it's about money, classes, housing or tech, I'll point you at the exact desk.";
+    /* ============================================================
+       BACKEND — POST /api/chat  { question }  ->  { answer }
+
+       Defaults to the SAME origin js/auth.js signs in on, because the
+       session cookie is scoped to that host: a request to 127.0.0.1:4000
+       would send no cookie and come back "Not authenticated".
+       Override by setting window.BRAGGAI_API_BASE before this script runs.
+       ============================================================ */
+    var API_URL = (window.BRAGGAI_API_BASE || 'http://localhost:4000') + '/api/chat';
+
+    var busy = false;      // one request in flight at a time
+    var stream = null;     // active typewriter, so a new turn can finish it instantly
+    var reduceMotion = window.matchMedia
+      && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
     function stamp() {
       return new Date().toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
     }
 
-    function addMessage(text, who) {
+    function scrollToEnd() {
+      log.scrollTop = log.scrollHeight;
+    }
+
+    function addBubble(who, text) {
       var el = document.createElement('div');
       el.className = 'msg msg-' + who;
+
+      var body = document.createElement('div');
+      body.className = 'msg-bubble';
+      body.appendChild(document.createTextNode(text || ''));
+
       var time = document.createElement('span');
       time.className = 'msg-time';
       time.textContent = (who === 'user' ? 'You' : 'BraggAI') + ' · ' + stamp();
-      el.appendChild(document.createTextNode(text));
+
+      el.appendChild(body);
       el.appendChild(time);
       log.appendChild(el);
-      log.scrollTop = log.scrollHeight;
+      scrollToEnd();
+      return { el: el, body: body };
+    }
+
+    function showTyping() {
+      var el = document.createElement('div');
+      el.className = 'msg msg-bot';
+      var dots = document.createElement('div');
+      dots.className = 'msg-dots';
+      dots.innerHTML = '<i></i><i></i><i></i>';
+      var time = document.createElement('span');
+      time.className = 'msg-time';
+      time.textContent = 'BraggAI · ' + stamp();
+      el.appendChild(dots);
+      el.appendChild(time);
+      log.appendChild(el);
+      scrollToEnd();
       return el;
     }
 
-    function replyTo(text) {
-      var typing = document.createElement('div');
-      typing.className = 'msg msg-bot msg-typing';
-      typing.textContent = '···';
-      log.appendChild(typing);
-      log.scrollTop = log.scrollHeight;
+    /* Reveal the answer character-by-character, fast enough that even a long
+       reply lands in about a second. Resolves when the text is fully shown. */
+    function typeOut(bubble, text) {
+      if (reduceMotion || text.length < 2) {
+        bubble.body.firstChild.nodeValue = text;
+        return Promise.resolve();
+      }
 
-      send.disabled = true;
-      setTimeout(function () {
-        typing.remove();
-        var body = FALLBACK;
-        for (var i = 0; i < REPLIES.length; i++) {
-          if (REPLIES[i][0].test(text)) { body = REPLIES[i][1]; break; }
-        }
-        addMessage(body, 'bot');
-        send.disabled = false;
-        input.focus();
-      }, 620);
+      var caret = document.createElement('span');
+      caret.className = 'msg-caret';
+      bubble.body.appendChild(caret);
+
+      return new Promise(function (resolve) {
+        var perTick = Math.max(1, Math.ceil(text.length / 80));
+        var shown = 0;
+
+        var id = setInterval(function () {
+          shown = Math.min(shown + perTick, text.length);
+          bubble.body.firstChild.nodeValue = text.slice(0, shown);
+          scrollToEnd();
+          if (shown >= text.length) {
+            clearInterval(id);
+            caret.remove();
+            stream = null;
+            resolve();
+          }
+        }, 16);
+
+        stream = { id: id, bubble: bubble, text: text };
+      });
+    }
+
+    /* Snap an in-progress animation straight to its final text. */
+    function finishStream() {
+      if (!stream) return;
+      clearInterval(stream.id);
+      stream.bubble.body.firstChild.nodeValue = stream.text;
+      var caret = stream.bubble.body.querySelector('.msg-caret');
+      if (caret) caret.remove();
+      stream = null;
+    }
+
+    function sendMessage(question) {
+      return fetch(API_URL, {
+        method: 'POST',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ question: question })
+      }).then(function (res) {
+        // A failed request may not be JSON at all, so never let res.json() reject.
+        return res.json().catch(function () { return {}; }).then(function (data) {
+          if (!res.ok) throw new Error(data.error || 'Something went wrong');
+          return data;
+        });
+      });
+    }
+
+    function setBusy(on) {
+      busy = on;
+      send.disabled = on;
+      send.textContent = on ? 'Sending' : 'Send →';
+      if (!on) input.focus();
     }
 
     function submit(text) {
       var value = String(text == null ? input.value : text).trim();
-      if (!value) return;
+      if (!value || busy) return;
+
+      finishStream();
       input.value = '';
       input.style.height = 'auto';
-      addMessage(value, 'user');
-      replyTo(value);
+      addBubble('user', value);
+
+      var pending = showTyping();
+      setBusy(true);
+
+      sendMessage(value).then(function (data) {
+        pending.remove();
+        var answer = data && typeof data.answer === 'string' ? data.answer.trim() : '';
+        if (!answer) answer = 'I could not find an answer to that.';
+        var bubble = addBubble('bot', '');
+        return typeOut(bubble, answer);
+      }).catch(function (err) {
+        pending.remove();
+        finishStream();
+        var bubble = addBubble('bot', '');
+        bubble.el.classList.add('msg-error');
+        bubble.body.textContent = (err && err.message)
+          ? err.message
+          : 'Could not reach BraggAI. Is the server running on port 4000?';
+        input.value = value; // don't lose what they typed
+      }).then(function () {
+        setBusy(false);
+      });
     }
 
     form.addEventListener('submit', function (e) {
